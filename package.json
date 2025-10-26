@@ -1,0 +1,35 @@
+{
+  "name": "ssh-auth-service",
+  "version": "1.0.0",
+  "description": "SSH key-based authentication service with demo application",
+  "type": "module",
+  "main": "auth-ssh-service.js",
+  "scripts": {
+    "start:auth": "node auth-ssh-service.js",
+    "start:demo": "node demo-app.js",
+    "start:both": "concurrently \"npm run start:auth\" \"npm run start:demo\""
+  },
+  "keywords": [
+    "ssh",
+    "authentication",
+    "public-key",
+    "security"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ssh2": "^1.15.0",
+    "uuid": "^9.0.1",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+

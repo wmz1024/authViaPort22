@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH 密钥认证 Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #764ba2;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #63408a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .ssh-command {
+            background: #1f2937;
+            color: #10b981;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .ssh-command code {
+            color: #10b981;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #374151;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #4b5563;
+        }
+
+        .ssh-key-list {
+            list-style: none;
+        }
+
+        .ssh-key-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ssh-key-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .ssh-key-info p {
+            color: #666;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .ssh-key-info small {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .user-info {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 3px solid #10b981;
+        }
+
+        .user-info h3 {
+            color: #065f46;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            color: #047857;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 SSH 密钥认证系统</h1>
+            <p>通过 SSH 公钥实现安全登录</p>
+        </div>
+
+        <!-- 未登录状态 -->
+        <div id="authSection">
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('login')">登录</button>
+                    <button class="tab" onclick="switchTab('register')">注册</button>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <!-- 登录表单 -->
+                <div id="loginTab" class="tab-content active">
+                    <h2>用户登录</h2>
+                    
+                    <div class="tabs" style="margin-bottom: 20px;">
+                        <button class="tab active" onclick="switchLoginMethod('password')">密码登录</button>
+                        <button class="tab" onclick="switchLoginMethod('ssh')">SSH 登录</button>
+                    </div>
+
+                    <!-- 密码登录 -->
+                    <div id="passwordLogin" class="tab-content active">
+                        <form id="passwordLoginForm">
+                            <div class="form-group">
+                                <label>用户名</label>
+                                <input type="text" id="loginUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label>密码</label>
+                                <input type="password" id="loginPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">登录</button>
+                        </form>
+                    </div>
+
+                    <!-- SSH登录 -->
+                    <div id="sshLogin" class="tab-content">
+                        <form id="sshLoginForm">
+                            <div class="form-group">
+                                <label>用户名</label>
+                                <input type="text" id="sshLoginUsername" required>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">通过 SSH 登录</button>
+                        </form>
+
+                        <div id="sshLoginProgress" class="hidden">
+                            <div class="alert alert-info">
+                                <strong>请在终端执行以下命令：</strong>
+                            </div>
+                            <div class="ssh-command">
+                                <code id="sshCommandText"></code>
+                                <button class="copy-btn" onclick="copySSHCommand()">复制</button>
+                            </div>
+                            <div id="sshStatusMessage" class="alert alert-info">
+                                <div class="spinner"></div>
+                                <span style="margin-left: 10px;">等待 SSH 连接...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 注册表单 -->
+                <div id="registerTab" class="tab-content">
+                    <h2>用户注册</h2>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label>用户名（至少3个字符）</label>
+                            <input type="text" id="registerUsername" required minlength="3">
+                        </div>
+                        <div class="form-group">
+                            <label>密码（至少6个字符）</label>
+                            <input type="password" id="registerPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>确认密码</label>
+                            <input type="password" id="registerPasswordConfirm" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 已登录状态 -->
+        <div id="dashboardSection" class="hidden">
+            <div class="card">
+                <div class="user-info">
+                    <h3>欢迎，<span id="currentUsername"></span>！</h3>
+                    <p>用户ID: <span id="currentUserId"></span></p>
+                    <button class="logout-btn" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>SSH 公钥管理</h2>
+                
+                <div id="dashboardAlert"></div>
+
+                <div class="form-group">
+                    <label>密钥名称</label>
+                    <input type="text" id="keyName" placeholder="例如：我的笔记本">
+                </div>
+                <div class="form-group">
+                    <label>SSH 公钥</label>
+                    <textarea id="publicKey" placeholder="粘贴你的 SSH 公钥（ssh-rsa AAAA...）"></textarea>
+                    <small style="color: #666; font-size: 12px;">提示：使用 ssh-keygen -t rsa -b 4096 生成密钥对</small>
+                </div>
+                <button class="btn btn-primary" onclick="addSSHKey()">添加 SSH 公钥</button>
+
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">已添加的 SSH 公钥</h3>
+                <ul id="sshKeyList" class="ssh-key-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+        let sshPollInterval = null;
+
+        // 初始化
+        if (authToken) {
+            loadUserData();
+        }
+
+        // 切换主标签
+        function switchTab(tab) {
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('loginTab').classList.remove('active');
+            document.getElementById('registerTab').classList.remove('active');
+            
+            if (tab === 'login') {
+                document.getElementById('loginTab').classList.add('active');
+            } else {
+                document.getElementById('registerTab').classList.add('active');
+            }
+            
+            clearAlerts();
+        }
+
+        // 切换登录方式
+        function switchLoginMethod(method) {
+            const tabs = document.querySelectorAll('#loginTab .tabs .tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('passwordLogin').classList.remove('active');
+            document.getElementById('sshLogin').classList.remove('active');
+            document.getElementById('sshLoginProgress').classList.add('hidden');
+            
+            if (method === 'password') {
+                document.getElementById('passwordLogin').classList.add('active');
+            } else {
+                document.getElementById('sshLogin').classList.add('active');
+            }
+            
+            if (sshPollInterval) {
+                clearInterval(sshPollInterval);
+                sshPollInterval = null;
+            }
+        }
+
+        // 显示提示
+        function showAlert(message, type = 'info', container = 'alertContainer') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const containerEl = document.getElementById(container);
+            containerEl.innerHTML = '';
+            containerEl.appendChild(alertDiv);
+        }
+
+        function clearAlerts(container = 'alertContainer') {
+            document.getElementById(container).innerHTML = '';
+        }
+
+        // 注册
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            
+            if (password !== passwordConfirm) {
+                showAlert('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('注册成功！请登录', 'success');
+                    setTimeout(() => switchTab('login'), 1500);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('注册失败：' + error.message, 'error');
+            }
+        });
+
+        // 密码登录
+        document.getElementById('passwordLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login/password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = data.user;
+                    showDashboard();
+                    loadSSHKeys();
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('登录失败：' + error.message, 'error');
+            }
+        });
+
+        // SSH登录
+        document.getElementById('sshLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('sshLoginUsername').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login/ssh/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示SSH命令
+                    document.getElementById('sshCommandText').textContent = data.sshCommand;
+                    document.getElementById('sshLoginProgress').classList.remove('hidden');
+                    
+                    // 开始轮询
+                    pollSSHLogin(data.sessionId);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('SSH登录初始化失败：' + error.message, 'error');
+            }
+        });
+
+        // 轮询SSH登录状态
+        function pollSSHLogin(sessionId) {
+            sshPollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/login/ssh/poll/${sessionId}`);
+                    const data = await response.json();
+                    
+                    const statusMessage = document.getElementById('sshStatusMessage');
+                    
+                    if (data.status === 'success') {
+                        clearInterval(sshPollInterval);
+                        authToken = data.token;
+                        localStorage.setItem('authToken', authToken);
+                        currentUser = data.user;
+                        showAlert('SSH登录成功！', 'success');
+                        setTimeout(() => {
+                            showDashboard();
+                            loadSSHKeys();
+                        }, 1000);
+                    } else if (data.status === 'authenticating') {
+                        // 更新状态消息
+                        statusMessage.innerHTML = '<div class="spinner"></div><span style="margin-left: 10px;">⏳ 等待用户在终端确认鉴权请求...</span>';
+                    } else if (data.status === 'denied') {
+                        clearInterval(sshPollInterval);
+                        document.getElementById('sshLoginProgress').classList.add('hidden');
+                        showAlert('您拒绝了鉴权请求，登录已取消', 'error');
+                    } else if (data.status === 'expired' || data.status === 'key_mismatch') {
+                        clearInterval(sshPollInterval);
+                        document.getElementById('sshLoginProgress').classList.add('hidden');
+                        showAlert(data.message, 'error');
+                    } else if (data.status === 'pending') {
+                        // 保持等待状态
+                        statusMessage.innerHTML = '<div class="spinner"></div><span style="margin-left: 10px;">等待 SSH 连接...</span>';
+                    }
+                } catch (error) {
+                    console.error('轮询错误:', error);
+                }
+            }, 2000);
+        }
+
+        // 复制SSH命令
+        function copySSHCommand() {
+            const text = document.getElementById('sshCommandText').textContent;
+            navigator.clipboard.writeText(text);
+            event.target.textContent = '已复制！';
+            setTimeout(() => {
+                event.target.textContent = '复制';
+            }, 2000);
+        }
+
+        // 显示仪表板
+        function showDashboard() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('currentUsername').textContent = currentUser.username;
+            document.getElementById('currentUserId').textContent = currentUser.id;
+        }
+
+        // 加载用户数据
+        async function loadUserData() {
+            try {
+                const response = await fetch(`${API_BASE}/user/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    showDashboard();
+                    loadSSHKeys();
+                } else {
+                    logout();
+                }
+            } catch (error) {
+                logout();
+            }
+        }
+
+        // 加载SSH公钥列表
+        async function loadSSHKeys() {
+            try {
+                const response = await fetch(`${API_BASE}/user/ssh-keys`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySSHKeys(data.keys);
+                }
+            } catch (error) {
+                console.error('加载SSH公钥失败:', error);
+            }
+        }
+
+        // 显示SSH公钥列表
+        function displaySSHKeys(keys) {
+            const listEl = document.getElementById('sshKeyList');
+            
+            if (keys.length === 0) {
+                listEl.innerHTML = '<li style="color: #999; text-align: center; padding: 20px;">暂无SSH公钥</li>';
+                return;
+            }
+            
+            listEl.innerHTML = keys.map(key => `
+                <li class="ssh-key-item">
+                    <div class="ssh-key-info">
+                        <h4>${key.name || '未命名'}</h4>
+                        <p>${key.publicKey.substring(0, 60)}...</p>
+                        <small>添加时间: ${new Date(key.addedAt).toLocaleString('zh-CN')}</small>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteSSHKey('${key.id}')">删除</button>
+                </li>
+            `).join('');
+        }
+
+        // 添加SSH公钥
+        async function addSSHKey() {
+            const name = document.getElementById('keyName').value.trim();
+            const publicKey = document.getElementById('publicKey').value.trim();
+            
+            if (!publicKey) {
+                showAlert('请输入SSH公钥', 'error', 'dashboardAlert');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/ssh-keys`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name: name || '未命名', publicKey })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('SSH公钥添加成功！', 'success', 'dashboardAlert');
+                    document.getElementById('keyName').value = '';
+                    document.getElementById('publicKey').value = '';
+                    loadSSHKeys();
+                } else {
+                    showAlert(data.message, 'error', 'dashboardAlert');
+                }
+            } catch (error) {
+                showAlert('添加失败：' + error.message, 'error', 'dashboardAlert');
+            }
+        }
+
+        // 删除SSH公钥
+        async function deleteSSHKey(keyId) {
+            if (!confirm('确定要删除这个SSH公钥吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/ssh-keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('SSH公钥已删除', 'success', 'dashboardAlert');
+                    loadSSHKeys();
+                } else {
+                    showAlert(data.message, 'error', 'dashboardAlert');
+                }
+            } catch (error) {
+                showAlert('删除失败：' + error.message, 'error', 'dashboardAlert');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            clearAlerts();
+            clearAlerts('dashboardAlert');
+        }
+    </script>
+</body>
+</html>
+
