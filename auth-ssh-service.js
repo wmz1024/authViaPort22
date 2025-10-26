@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 // 配置
 const CONFIG = {
-  SSH_PORT: process.env.SSH_PORT || 2222,
+  SSH_PORT: process.env.SSH_PORT || 22,
   HTTP_PORT: process.env.HTTP_PORT || 3000,
   SSH_HOST: process.env.SSH_HOST || 'localhost',
   CODE_EXPIRY: 5 * 60 * 1000, // 5分钟
@@ -157,22 +157,22 @@ function startSSHServer() {
           // 显示欢迎信息和用途
           stream.write('\r\n');
           stream.write('┌────────────────────────────────────────────────────┐\r\n');
-          stream.write('│           SSH 密钥认证服务                         │\r\n');
-          stream.write('│      SSH Key Authentication Service               │\r\n');
+          stream.write('│           SSH 密钥认证服务                          │\r\n');
+          stream.write('│      SSH Key Authentication Service                │\r\n');
           stream.write('└────────────────────────────────────────────────────┘\r\n');
           stream.write('\r\n');
           stream.write('✓ SSH 公钥认证成功！\r\n');
           stream.write('  SSH public key authenticated successfully!\r\n');
           stream.write('\r\n');
           stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
-          stream.write(`📋 鉴权用途 | Purpose: ${purpose}\r\n`);
+          stream.write(`   鉴权用途 | Purpose: ${purpose}\r\n`);
           stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
           stream.write('\r\n');
-          stream.write('⚠️  安全提示 | Security Notice:\r\n');
+          stream.write('    安全提示 | Security Notice:\r\n');
           stream.write('   此操作将授权使用您的 SSH 公钥进行身份验证。\r\n');
           stream.write('   This will authorize the use of your SSH public key.\r\n');
           stream.write('\r\n');
-          stream.write('❓ 是否同意此次鉴权请求？\r\n');
+          stream.write('   是否同意此次鉴权请求？\r\n');
           stream.write('   Do you approve this authentication request?\r\n');
           stream.write('\r\n');
           stream.write('   输入 y 同意 | Type "y" to approve\r\n');
@@ -195,7 +195,7 @@ function startSSHServer() {
                 // 用户同意
                 userConfirmed = true;
                 stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
-                stream.write('✅ 已同意 | Approved\r\n');
+                stream.write('   已同意 | Approved\r\n');
                 stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
                 stream.write('\r\n');
                 stream.write('✓ 鉴权成功！您的 SSH 公钥已被记录。\r\n');
@@ -223,7 +223,7 @@ function startSSHServer() {
               } else {
                 // 用户拒绝
                 stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
-                stream.write('❌ 已拒绝 | Denied\r\n');
+                stream.write('   已拒绝 | Denied\r\n');
                 stream.write('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\r\n');
                 stream.write('\r\n');
                 stream.write('✗ 鉴权已取消。\r\n');
@@ -408,6 +408,7 @@ function startHTTPServer() {
       service: 'SSH Authentication Service',
       status: 'running',
       timestamp: Date.now(),
+      poweredby: 'Tasuku Hachisuka [https://wmz1024.com/]',
       activeCodes: authCodes.size
     });
   });
@@ -417,6 +418,7 @@ function startHTTPServer() {
     res.json({
       service: 'SSH Authentication Service',
       version: '1.0.0',
+      poweredby: 'Tasuku Hachisuka [https://wmz1024.com/]',
       endpoints: {
         'POST /api/auth/generate-code': '生成临时SSH验证码',
         'GET /api/auth/verify/:code': '查询验证码状态和公钥',
